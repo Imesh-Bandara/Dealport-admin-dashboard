@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 
@@ -27,13 +28,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-8 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold">
-            D
-          </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            DEALP<span className="text-emerald-600">✷</span>RT
-          </span>
+        <div className="mb-8">
+          <Image src="/logo.png" alt="Dealport" width={200} height={64} priority className="h-10 w-auto object-contain" />
         </div>
 
         <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Sign in to your account</h1>

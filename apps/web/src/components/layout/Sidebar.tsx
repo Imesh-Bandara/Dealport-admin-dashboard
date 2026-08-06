@@ -7,18 +7,8 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
   LayoutDashboard,
-  ShoppingCart,
-  Users,
-  Ticket,
-  LayoutGrid,
-  ArrowLeftRight,
-  Star,
   PlusSquare,
-  Image as ImageIcon,
   ListChecks,
-  FileText,
-  UserCog,
-  ShieldCheck,
   Store,
   PanelLeftClose,
   PanelLeftOpen,
@@ -27,26 +17,16 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-const MAIN_NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/orders", label: "Order Management", icon: ShoppingCart },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/coupon-code", label: "Coupon Code", icon: Ticket },
-  { href: "/categories", label: "Categories", icon: LayoutGrid },
-  { href: "/transactions", label: "Transaction", icon: ArrowLeftRight },
-  { href: "/brand", label: "Brand", icon: Star },
-];
+// Scoped to the three in-scope screens per the assessment brief (Dashboard /
+// Add Products / Product List) — everything else in the wider Figma admin
+// kit (Order Management, Customers, Coupon Code, Brand, Categories,
+// Transactions, Product Media/Reviews, Admin role, Control Authority) is
+// intentionally out of scope and not linked here.
+const MAIN_NAV = [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }];
 
 const PRODUCT_NAV = [
   { href: "/products/new", label: "Add Products", icon: PlusSquare },
-  { href: "/products/media", label: "Product Media", icon: ImageIcon },
   { href: "/products", label: "Product List", icon: ListChecks },
-  { href: "/products/reviews", label: "Product Reviews", icon: FileText },
-];
-
-const ADMIN_NAV = [
-  { href: "/admin-role", label: "Admin role", icon: UserCog },
-  { href: "/control-authority", label: "Control Authority", icon: ShieldCheck },
 ];
 
 function NavSection({
@@ -167,7 +147,6 @@ export function Sidebar() {
       <nav className="flex-1 pb-2">
         <NavSection title="Main menu" items={MAIN_NAV} pathname={pathname} collapsed={collapsed} />
         <NavSection title="Product" items={PRODUCT_NAV} pathname={pathname} collapsed={collapsed} />
-        <NavSection title="Admin" items={ADMIN_NAV} pathname={pathname} collapsed={collapsed} />
       </nav>
 
       <div className={clsx("border-t border-slate-100 py-4 dark:border-slate-800", collapsed ? "px-2" : "px-3")}>

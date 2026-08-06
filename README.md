@@ -63,6 +63,7 @@ npm run start:dev   # http://localhost:4000/api
 | `PORT` | API port (default `4000`) |
 | `CORS_ORIGIN` | Comma-separated list of allowed frontend origins |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Credentials created by the seed script |
+| `GEMINI_API_KEY` | Required only for the "Generate description with AI" button (the magic-wand icon next to Product Description on the Add Product form). Get a free key from [Google AI Studio](https://aistudio.google.com/apikey). Without it, that one button returns a clean error — everything else in the app works normally. |
 
 ### Seed credentials (local dev only — rotate before any real deployment)
 
@@ -154,6 +155,15 @@ Log in at `/login` with the seed credentials above.
     `/uploads/:filename`. The form uploads the main image plus up to 10
     gallery images (drag-and-drop or browse), previews them inline, and
     saves the returned URLs on `imageUrl` / `images`.
+  - **AI description generation** (extra, not in the original brief): the
+    magic-wand icon next to Product Description calls `POST
+    /api/products/generate-description` (`apps/api/src/products`), which
+    builds a short prompt from the current name/category/price and calls the
+    real Gemini API (`gemini-2.0-flash`, native `fetch`, ~10s timeout).
+    Requires `GEMINI_API_KEY` — see env vars above; without it the endpoint
+    returns a clean 503 and the rest of the form is unaffected. The pencil
+    icon just toggles the textarea between read-only and editable; no API
+    call.
 - **Product List:** API-integrated table with search, category filter,
   status filter, and pagination; edit and delete actions call
   `PATCH`/`DELETE /products/:id` (edit reuses the same form component as Add

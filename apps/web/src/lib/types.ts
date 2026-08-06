@@ -59,6 +59,16 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface GenerateDescriptionInput {
+  name: string;
+  category?: string;
+  price?: number;
+}
+
+export interface GenerateDescriptionResponse {
+  description: string;
+}
+
 export interface ProductInput {
   name: string;
   description?: string;

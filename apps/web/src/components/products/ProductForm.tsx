@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
-import { Eye, ImagePlus, Loader2, Plus, X } from "lucide-react";
+import { Eye, ImagePlus, Loader2, Pencil, Plus, Wand2, X } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Category, Product, ProductInput, StockStatus } from "@/lib/types";
 import {
@@ -33,6 +33,9 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
+  const [isDescriptionEditable, setIsDescriptionEditable] = useState(true);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
   // `price` and `discountAmount` are always denominated in whichever
   // currency `country` currently points at — not fixed to USD. Switching
   // the country selector live-converts both displayed numbers (see
@@ -153,6 +156,31 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
       if (!prev || Number.isNaN(n)) return prev;
       return convertBetween(n, selectedCurrency, nextCurrency).toFixed(nextCurrency.decimals);
     });
+  }
+
+  async function handleGenerateDescription() {
+    if (!name.trim()) {
+      setDescriptionError("Enter a product name first.");
+      return;
+    }
+    setDescriptionError(null);
+    setIsGeneratingDescription(true);
+    try {
+      const selectedCategoryName = categories.find((c) => c.id === categoryId)?.name;
+      const { description: generated } = await api.products.generateDescription({
+        name: name.trim(),
+        category: selectedCategoryName,
+        price: priceUsd > 0 ? priceUsd : undefined,
+      });
+      setDescription(generated);
+      setIsDescriptionEditable(true);
+    } catch (err) {
+      setDescriptionError(
+        err instanceof ApiError ? err.message : "Failed to generate a description. Please try again.",
+      );
+    } finally {
+      setIsGeneratingDescription(false);
+    }
   }
 
   function buildPayload(status: "DRAFT" | "PUBLISHED"): ProductInput {
@@ -284,14 +312,61 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                 <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-slate-700">
                   Product Description
                 </label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  maxLength={4000}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
+                <div className="relative">
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    readOnly={!isDescriptionEditable}
+                    rows={4}
+                    maxLength={4000}
+                    className={clsx(
+                      "w-full rounded-lg border border-slate-300 px-3 py-2 pb-9 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100",
+                      !isDescriptionEditable && "bg-slate-50 text-slate-500",
+                    )}
+                  />
+                  <div className="absolute bottom-2 right-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label={isDescriptionEditable ? "Lock description" : "Edit description"}
+                      aria-pressed={isDescriptionEditable}
+                      title={isDescriptionEditable ? "Lock description" : "Edit description"}
+                      onClick={() => setIsDescriptionEditable((v) => !v)}
+                      className={clsx(
+                        "flex h-7 w-7 items-center justify-center rounded-md border transition-colors",
+                        isDescriptionEditable
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-600"
+                          : "border-slate-200 bg-white text-slate-400 hover:text-slate-600",
+                      )}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Generate description with AI"
+                      title="Generate description with AI"
+                      disabled={isGeneratingDescription}
+                      onClick={() => void handleGenerateDescription()}
+                      className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-300 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isGeneratingDescription ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                {descriptionError && (
+                  <p role="alert" className="mt-1.5 text-xs text-red-600">
+                    {descriptionError}
+                  </p>
+                )}
+                <p className="mt-1.5 text-xs text-slate-400">
+                  <Pencil className="mr-1 inline h-3 w-3 align-[-1px]" /> toggles editing ·{" "}
+                  <Wand2 className="mr-1 inline h-3 w-3 align-[-1px]" /> generates a description from the name/
+                  category/price via Gemini.
+                </p>
               </div>
             </div>
           </section>

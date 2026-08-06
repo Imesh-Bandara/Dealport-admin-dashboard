@@ -17,6 +17,7 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
+import { GenerateDescriptionDto } from './dto/generate-description.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('products')
@@ -51,6 +52,11 @@ export class ProductsController {
   @Post()
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto);
+  }
+
+  @Post('generate-description')
+  generateDescription(@Body() dto: GenerateDescriptionDto) {
+    return this.productsService.generateDescription(dto);
   }
 
   @Patch(':id')

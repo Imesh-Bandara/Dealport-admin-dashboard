@@ -1,5 +1,7 @@
 import type {
   Category,
+  GenerateDescriptionInput,
+  GenerateDescriptionResponse,
   LoginResponse,
   PaginatedProducts,
   Product,
@@ -99,6 +101,11 @@ export const api = {
     top: (limit = 4) => request<Product[]>(`/products/top?limit=${limit}`),
     bestSelling: (limit = 4) => request<Product[]>(`/products/best-selling?limit=${limit}`),
     stats: () => request<{ totalProducts: number; published: number; outOfStock: number }>("/products/stats"),
+    generateDescription: (data: GenerateDescriptionInput) =>
+      request<GenerateDescriptionResponse>("/products/generate-description", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
 
   uploads: {

@@ -28,7 +28,7 @@ export interface Product {
   featured: boolean;
   imageUrl: string | null;
   images: string[];
-  color: string | null;
+  colors: string[];
   totalOrders: number;
   categoryId: string | null;
   category: Category | null;
@@ -84,7 +84,7 @@ export interface ProductInput {
   featured?: boolean;
   imageUrl?: string;
   images?: string[];
-  color?: string;
+  colors?: string[];
   categoryId?: string;
   tags?: string[];
 }

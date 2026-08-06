@@ -87,9 +87,10 @@ export class CreateProductDto {
   images?: string[];
 
   @IsOptional()
-  @IsString()
-  @MaxLength(32)
-  color?: string;
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  colors?: string[];
 
   @IsOptional()
   @IsUUID()

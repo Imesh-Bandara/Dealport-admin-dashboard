@@ -56,7 +56,7 @@ model Product {
   featured        Boolean       @default(false)
   imageUrl        String?
   images          String[]      @default([])
-  color           String?
+  colors          String[]      @default([])
   totalOrders     Int           @default(0)
   categoryId      String?
   category        Category?     @relation(fields: [categoryId], references: [id])

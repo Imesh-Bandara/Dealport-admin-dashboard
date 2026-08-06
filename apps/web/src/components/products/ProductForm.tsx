@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
-import { Eye, ImagePlus, Loader2, Pencil, Plus, Wand2, X } from "lucide-react";
+import { Check, Eye, ImagePlus, Loader2, Pencil, Plus, Wand2, X } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Category, Product, ProductInput, StockStatus } from "@/lib/types";
 import {
@@ -64,7 +64,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
   const [tags, setTags] = useState(initialData?.tags.map((t) => t.name).join(", ") ?? "");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl ?? "");
   const [images, setImages] = useState<string[]>(initialData?.images ?? []);
-  const [color, setColor] = useState(initialData?.color ?? "");
+  const [colors, setColors] = useState<string[]>(initialData?.colors ?? []);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<"draft" | "publish" | null>(null);
   const [isUploadingMain, setIsUploadingMain] = useState(false);
@@ -207,7 +207,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
         .filter(Boolean),
       imageUrl: imageUrl || undefined,
       images: images.length > 0 ? images : undefined,
-      color: color || undefined,
+      colors: colors.length > 0 ? colors : undefined,
     };
   }
 
@@ -533,13 +533,13 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   aria-label="Unlimited stock"
                   onClick={() => setStockUnlimited((v) => !v)}
                   className={clsx(
-                    "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                    "inline-flex h-6 w-11 shrink-0 items-center rounded-full border-0 p-0 transition-colors",
                     stockUnlimited ? "bg-emerald-600" : "bg-slate-300",
                   )}
                 >
                   <span
                     className={clsx(
-                      "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+                      "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform",
                       stockUnlimited ? "translate-x-5" : "translate-x-0.5",
                     )}
                   />
@@ -555,6 +555,25 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                 />
                 Highlight this product in a featured section.
               </label>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-5">
+              <button
+                type="button"
+                disabled={isSubmitting !== null}
+                onClick={(e) => handleSubmit(e, "DRAFT")}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              >
+                {isSubmitting === "draft" ? "Saving…" : "Save to draft"}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting !== null}
+                onClick={(e) => handleSubmit(e, "PUBLISHED")}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {isSubmitting === "publish" ? "Publishing…" : "Publish Product"}
+              </button>
             </div>
           </section>
         </div>
@@ -679,20 +698,34 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
             </div>
 
             <div className="mt-3">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Select your color</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Select your color(s)</span>
               <div className="flex gap-2">
-                {COLOR_SWATCHES.map((swatch) => (
-                  <button
-                    type="button"
-                    key={swatch}
-                    aria-label={`Choose color ${swatch}`}
-                    onClick={() => setColor(swatch)}
-                    className={`h-7 w-7 rounded-full border-2 ${
-                      color === swatch ? "border-emerald-600" : "border-transparent"
-                    }`}
-                    style={{ backgroundColor: swatch }}
-                  />
-                ))}
+                {COLOR_SWATCHES.map((swatch) => {
+                  const isSelected = colors.includes(swatch);
+                  return (
+                    <button
+                      type="button"
+                      key={swatch}
+                      aria-label={`${isSelected ? "Remove" : "Add"} color ${swatch}`}
+                      aria-pressed={isSelected}
+                      onClick={() =>
+                        setColors((prev) =>
+                          prev.includes(swatch) ? prev.filter((c) => c !== swatch) : [...prev, swatch],
+                        )
+                      }
+                      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
+                        isSelected ? "border-emerald-600" : "border-transparent"
+                      }`}
+                      style={{ backgroundColor: swatch }}
+                    >
+                      {isSelected && (
+                        <Check
+                          className={`h-3.5 w-3.5 ${swatch === "#1f2937" ? "text-white" : "text-slate-900"}`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </section>

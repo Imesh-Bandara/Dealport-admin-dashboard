@@ -141,13 +141,20 @@ export function CustomerPreview({ product, editHref }: { product: Product; editH
               <p className="mt-4 text-sm leading-relaxed text-slate-600">{product.description}</p>
             )}
 
-            {product.color && (
+            {product.colors.length > 0 && (
               <div className="mt-4">
-                <span className="mb-1.5 block text-xs font-semibold text-slate-500">Color</span>
-                <span
-                  className="inline-block h-7 w-7 rounded-full border border-slate-200"
-                  style={{ backgroundColor: product.color }}
-                />
+                <span className="mb-1.5 block text-xs font-semibold text-slate-500">
+                  {product.colors.length > 1 ? "Colors" : "Color"}
+                </span>
+                <div className="flex gap-2">
+                  {product.colors.map((color) => (
+                    <span
+                      key={color}
+                      className="inline-block h-7 w-7 rounded-full border border-slate-200"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 

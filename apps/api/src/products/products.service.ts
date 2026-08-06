@@ -273,7 +273,16 @@ export class ProductsService {
       system:
         'You write short e-commerce product descriptions: 2-3 sentences, ' +
         'upbeat and persuasive marketing tone, plain text only (no markdown, ' +
-        'no quotation marks around the output).',
+        'no quotation marks around the output). Prioritize real, specific ' +
+        'facts about the exact product named below — if you recognize it as ' +
+        'an actual real-world product, draw on what you actually know about ' +
+        'it (e.g. its real chip, display, materials, or capabilities) rather ' +
+        'than generic claims. If the name is not a recognizable real ' +
+        'product, describe it plainly by its name and category instead of ' +
+        'inventing specific specs you cannot know. Avoid generic filler ' +
+        'phrases like "cutting-edge", "game-changing", or "revolutionize" — ' +
+        'be concrete about what actually makes this specific product what ' +
+        'it is.',
       user: details.join('\n'),
     };
   }

@@ -114,7 +114,7 @@ export function Sidebar() {
         ) : (
           <>
             <Image
-              src="/logo.png"
+              src="/logo-background-remover.png"
               alt="Dealport"
               width={200}
               height={64}

@@ -29,7 +29,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-8">
-          <Image src="/logo.png" alt="Dealport" width={200} height={64} priority className="h-10 w-auto object-contain" />
+          <Image src="/logo-background-remover.png" alt="Dealport" width={200} height={64} priority className="h-10 w-auto object-contain" />
         </div>
 
         <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Sign in to your account</h1>

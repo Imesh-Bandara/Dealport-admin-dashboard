@@ -1,0 +1,9 @@
+# OS junk
+.DS_Store
+
+# editor
+.vscode/
+.idea/
+
+# each app manages its own node_modules / build output / env files
+# via apps/api/.gitignore and apps/web/.gitignore

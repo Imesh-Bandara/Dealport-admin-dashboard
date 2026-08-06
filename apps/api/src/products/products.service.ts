@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ProductStatus, StockStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -61,7 +61,17 @@ export class ProductsService {
     return product;
   }
 
+  // Only validates the range when both ends are present in the same payload —
+  // a PATCH that only touches one end isn't cross-checked against the
+  // product's existing stored value.
+  private assertValidExpirationWindow(start?: string, end?: string) {
+    if (start && end && new Date(end) < new Date(start)) {
+      throw new BadRequestException('expirationEnd must not be before expirationStart');
+    }
+  }
+
   async create(dto: CreateProductDto) {
+    this.assertValidExpirationWindow(dto.expirationStart, dto.expirationEnd);
     const { tags, categoryId, ...rest } = dto;
     return this.prisma.product.create({
       data: {
@@ -84,6 +94,7 @@ export class ProductsService {
 
   async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
+    this.assertValidExpirationWindow(dto.expirationStart, dto.expirationEnd);
     const { tags, categoryId, ...rest } = dto;
     return this.prisma.product.update({
       where: { id },

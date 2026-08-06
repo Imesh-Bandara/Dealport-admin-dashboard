@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsIn,
   IsInt,
+  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
@@ -43,6 +44,14 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   taxIncluded?: boolean;
+
+  @IsOptional()
+  @IsISO8601()
+  expirationStart?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  expirationEnd?: string;
 
   @IsOptional()
   @Type(() => Number)

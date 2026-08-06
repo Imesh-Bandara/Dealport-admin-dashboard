@@ -18,6 +18,8 @@ export interface Product {
   description: string | null;
   price: string;
   discountPrice: string | null;
+  expirationStart: string | null;
+  expirationEnd: string | null;
   taxIncluded: boolean;
   stockQuantity: number;
   stockUnlimited: boolean;
@@ -62,6 +64,8 @@ export interface ProductInput {
   description?: string;
   price: number;
   discountPrice?: number;
+  expirationStart?: string;
+  expirationEnd?: string;
   taxIncluded?: boolean;
   stockQuantity?: number;
   stockUnlimited?: boolean;

@@ -3,9 +3,18 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, ImagePlus, Loader2, Plus, X } from "lucide-react";
+import clsx from "clsx";
+import { ChevronDown, Eye, ImagePlus, Loader2, Plus, X } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Category, Product, ProductInput, StockStatus } from "@/lib/types";
+import { formatCurrency } from "@/lib/format";
+import {
+  COUNTRY_CURRENCIES,
+  DEFAULT_COUNTRY_CURRENCY,
+  convertFromUsd,
+  findCountryCurrency,
+  formatCurrencyAmount,
+} from "@/lib/currency";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -24,7 +33,18 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [price, setPrice] = useState(initialData?.price ?? "");
-  const [discountPrice, setDiscountPrice] = useState(initialData?.discountPrice ?? "");
+  // The API stores the final sale price in `discountPrice`, but the form asks
+  // for the discount *amount* to subtract and computes/displays the sale
+  // price live (see the "Sale = $x" preview below) — this state holds that
+  // amount, not the final price.
+  const [discountAmount, setDiscountAmount] = useState(() => {
+    if (!initialData?.discountPrice) return "";
+    const amount = Number(initialData.price) - Number(initialData.discountPrice);
+    return amount > 0 ? String(amount) : "";
+  });
+  const [countryCurrency, setCountryCurrency] = useState(DEFAULT_COUNTRY_CURRENCY.currency);
+  const [expirationStart, setExpirationStart] = useState(initialData?.expirationStart?.slice(0, 10) ?? "");
+  const [expirationEnd, setExpirationEnd] = useState(initialData?.expirationEnd?.slice(0, 10) ?? "");
   const [taxIncluded, setTaxIncluded] = useState(initialData?.taxIncluded ?? true);
   const [stockQuantity, setStockQuantity] = useState(String(initialData?.stockQuantity ?? 0));
   const [stockUnlimited, setStockUnlimited] = useState(initialData?.stockUnlimited ?? false);
@@ -102,12 +122,22 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
     api.categories().then(setCategories).catch(() => setError("Failed to load categories"));
   }, []);
 
+  const numericPrice = Number(price) || 0;
+  const numericDiscountAmount = Number(discountAmount) || 0;
+  const salePrice = numericDiscountAmount > 0 ? Math.max(0, numericPrice - numericDiscountAmount) : null;
+  const selectedCurrency = findCountryCurrency(countryCurrency);
+  const convertedPrice = numericPrice > 0 ? convertFromUsd(numericPrice, selectedCurrency) : 0;
+
   function buildPayload(status: "DRAFT" | "PUBLISHED"): ProductInput {
     return {
       name,
       description: description || undefined,
-      price: Number(price),
-      discountPrice: discountPrice ? Number(discountPrice) : undefined,
+      price: numericPrice,
+      // The form collects a discount *amount*; the API stores the resulting
+      // final sale price in `discountPrice`.
+      discountPrice: salePrice !== null ? salePrice : undefined,
+      expirationStart: expirationStart ? new Date(expirationStart).toISOString() : undefined,
+      expirationEnd: expirationEnd ? new Date(expirationEnd).toISOString() : undefined,
       taxIncluded,
       stockQuantity: Number(stockQuantity) || 0,
       stockUnlimited,
@@ -135,6 +165,10 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
     }
     if (!price || Number(price) < 0) {
       setError("Enter a valid product price.");
+      return;
+    }
+    if (expirationStart && expirationEnd && new Date(expirationEnd) < new Date(expirationStart)) {
+      setError("Expiration end date must not be before the start date.");
       return;
     }
     if (isUploadingMain || isUploadingGallery) {
@@ -237,57 +271,130 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <h2 className="text-sm font-semibold text-slate-800">Pricing</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
+              <div className="sm:col-span-2">
                 <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-slate-700">
                   Product Price
                 </label>
-                <input
-                  id="price"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
+                <div className="flex items-stretch rounded-lg border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+                  <span className="flex items-center pl-3 text-sm text-slate-400">$</span>
+                  <input
+                    id="price"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    required
+                    className="w-full min-w-0 border-none bg-transparent px-2 py-2 text-sm outline-none"
+                  />
+                  <div className="relative flex items-center border-l border-slate-200 pl-2">
+                    <select
+                      aria-label="Preview currency for the price above"
+                      value={countryCurrency}
+                      onChange={(e) => setCountryCurrency(e.target.value)}
+                      className="h-full appearance-none bg-transparent py-2 pl-1 pr-6 text-sm text-slate-600 outline-none"
+                    >
+                      {COUNTRY_CURRENCIES.map((c) => (
+                        <option key={c.currency} value={c.currency}>
+                          {c.flag} {c.currency}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {selectedCurrency.currency === "USD"
+                    ? "Stored and submitted in USD."
+                    : `≈ ${formatCurrencyAmount(convertedPrice, selectedCurrency)} at a static reference rate — the price is still stored and submitted in USD.`}
+                </p>
               </div>
+
               <div>
-                <label htmlFor="discountPrice" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="discountAmount" className="mb-1.5 block text-sm font-medium text-slate-700">
                   Discounted Price (Optional)
                 </label>
-                <input
-                  id="discountPrice"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={discountPrice}
-                  onChange={(e) => setDiscountPrice(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
+                <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+                  <span className="flex items-center bg-emerald-50 px-3 text-sm font-semibold text-emerald-700">
+                    $
+                  </span>
+                  <input
+                    id="discountAmount"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full min-w-0 border-none px-2 py-2 text-sm outline-none"
+                  />
+                  {salePrice !== null && (
+                    <span className="flex items-center whitespace-nowrap pr-3 text-xs text-slate-500">
+                      Sale= <span className="ml-1 font-semibold text-emerald-600">{formatCurrency(salePrice)}</span>
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-slate-400">Amount to subtract from the price above.</p>
               </div>
-              <div className="flex items-center gap-4 sm:col-span-2">
-                <span className="text-sm font-medium text-slate-700">Tax Included</span>
-                <label className="flex items-center gap-1.5 text-sm text-slate-600">
-                  <input
-                    type="radio"
-                    name="taxIncluded"
-                    checked={taxIncluded}
-                    onChange={() => setTaxIncluded(true)}
-                    className="accent-emerald-600"
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center gap-1.5 text-sm text-slate-600">
-                  <input
-                    type="radio"
-                    name="taxIncluded"
-                    checked={!taxIncluded}
-                    onChange={() => setTaxIncluded(false)}
-                    className="accent-emerald-600"
-                  />
-                  No
-                </label>
+
+              <div>
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Tax Included</span>
+                <div className="flex items-center gap-4 py-2">
+                  <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                    <input
+                      type="radio"
+                      name="taxIncluded"
+                      checked={taxIncluded}
+                      onChange={() => setTaxIncluded(true)}
+                      className="accent-emerald-600"
+                    />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                    <input
+                      type="radio"
+                      name="taxIncluded"
+                      checked={!taxIncluded}
+                      onChange={() => setTaxIncluded(false)}
+                      className="accent-emerald-600"
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Expiration</span>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="expirationStart" className="mb-1 block text-xs text-slate-500">
+                      Start
+                    </label>
+                    <input
+                      id="expirationStart"
+                      type="date"
+                      value={expirationStart}
+                      onChange={(e) => setExpirationStart(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="expirationEnd" className="mb-1 block text-xs text-slate-500">
+                      End
+                    </label>
+                    <input
+                      id="expirationEnd"
+                      type="date"
+                      value={expirationEnd}
+                      min={expirationStart || undefined}
+                      onChange={(e) => setExpirationEnd(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Optional — leave both blank if this pricing never expires.
+                </p>
               </div>
             </div>
           </section>
@@ -304,9 +411,10 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   type="number"
                   min={0}
                   disabled={stockUnlimited}
-                  value={stockQuantity}
+                  value={stockUnlimited ? "" : stockQuantity}
+                  placeholder={stockUnlimited ? "Unlimited" : undefined}
                   onChange={(e) => setStockQuantity(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-50"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-50 disabled:text-slate-400"
                 />
               </div>
               <div>
@@ -323,15 +431,27 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   <option value="OUT_OF_STOCK">Out of Stock</option>
                 </select>
               </div>
-              <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2">
-                <input
-                  type="checkbox"
-                  checked={stockUnlimited}
-                  onChange={(e) => setStockUnlimited(e.target.checked)}
-                  className="h-4 w-4 rounded accent-emerald-600"
-                />
-                Unlimited
-              </label>
+              <div className="flex items-center gap-3 sm:col-span-2">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={stockUnlimited}
+                  aria-label="Unlimited stock"
+                  onClick={() => setStockUnlimited((v) => !v)}
+                  className={clsx(
+                    "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                    stockUnlimited ? "bg-emerald-600" : "bg-slate-300",
+                  )}
+                >
+                  <span
+                    className={clsx(
+                      "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+                      stockUnlimited ? "translate-x-5" : "translate-x-0.5",
+                    )}
+                  />
+                </button>
+                <span className="text-sm text-slate-600">Unlimited</span>
+              </div>
               <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2">
                 <input
                   type="checkbox"

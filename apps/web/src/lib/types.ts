@@ -59,6 +59,16 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export type NotificationType = "PRODUCT_CREATED" | "PRODUCT_UPDATED" | "PRODUCT_DELETED";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
 export interface GenerateDescriptionInput {
   name: string;
   category?: string;

@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { LoggingMiddleware } from './common/logging.middleware';
 
 @Module({
@@ -20,6 +21,7 @@ import { LoggingMiddleware } from './common/logging.middleware';
     ProductsModule,
     CategoriesModule,
     UploadsModule,
+    NotificationsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

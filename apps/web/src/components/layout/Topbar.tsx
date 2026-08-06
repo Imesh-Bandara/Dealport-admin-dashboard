@@ -1,8 +1,9 @@
 "use client";
 
-import { Bell, Search, Sun, Moon } from "lucide-react";
+import { Search, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { NotificationBell } from "./NotificationBell";
 
 export function Topbar({ title }: { title: string }) {
   const { user } = useAuth();
@@ -22,13 +23,7 @@ export function Topbar({ title }: { title: string }) {
             className="w-64 rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
           />
         </div>
-        <button
-          aria-label="Notifications"
-          className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-500" />
-        </button>
+        <NotificationBell />
         <button
           type="button"
           role="switch"

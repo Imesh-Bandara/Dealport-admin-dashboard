@@ -6,8 +6,14 @@ import {
   RequestTimeoutException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { Prisma, ProductStatus, StockStatus } from '@prisma/client';
+import {
+  NotificationType,
+  Prisma,
+  ProductStatus,
+  StockStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -25,7 +31,22 @@ const AI_TIMEOUT_MS = 10_000;
 export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
+
+  // A notification failing to write is never allowed to fail the product
+  // mutation it's describing — log and swallow instead of propagating.
+  private async notify(type: NotificationType, message: string) {
+    try {
+      await this.notifications.log(type, message);
+    } catch (err) {
+      this.logger.warn(
+        `Failed to write notification: ${err instanceof Error ? err.message : 'unknown error'}`,
+      );
+    }
+  }
 
   async findAll(query: QueryProductDto) {
     const page = query.page ?? 1;
@@ -93,7 +114,7 @@ export class ProductsService {
   async create(dto: CreateProductDto) {
     this.assertValidExpirationWindow(dto.expirationStart, dto.expirationEnd);
     const { tags, categoryId, ...rest } = dto;
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         ...rest,
         stockStatus: rest.stockStatus ?? StockStatus.IN_STOCK,
@@ -110,13 +131,18 @@ export class ProductsService {
       },
       include: { category: true, tags: true },
     });
+    await this.notify(
+      'PRODUCT_CREATED',
+      `Product "${product.name}" was created.`,
+    );
+    return product;
   }
 
   async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
     this.assertValidExpirationWindow(dto.expirationStart, dto.expirationEnd);
     const { tags, categoryId, ...rest } = dto;
-    return this.prisma.product.update({
+    const product = await this.prisma.product.update({
       where: { id },
       data: {
         ...rest,
@@ -138,11 +164,20 @@ export class ProductsService {
       },
       include: { category: true, tags: true },
     });
+    await this.notify(
+      'PRODUCT_UPDATED',
+      `Product "${product.name}" was updated.`,
+    );
+    return product;
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    const product = await this.findOne(id);
     await this.prisma.product.delete({ where: { id } });
+    await this.notify(
+      'PRODUCT_DELETED',
+      `Product "${product.name}" was deleted.`,
+    );
     return { id, deleted: true };
   }
 

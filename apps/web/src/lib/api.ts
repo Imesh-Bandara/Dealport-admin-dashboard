@@ -3,6 +3,7 @@ import type {
   GenerateDescriptionInput,
   GenerateDescriptionResponse,
   LoginResponse,
+  Notification,
   PaginatedProducts,
   Product,
   ProductInput,
@@ -106,6 +107,15 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+  },
+
+  notifications: {
+    list: (limit = 20) => request<Notification[]>(`/notifications?limit=${limit}`),
+    unreadCount: () => request<{ count: number }>("/notifications/unread-count"),
+    markRead: (id: string) =>
+      request<Notification>(`/notifications/${id}/read`, { method: "PATCH" }),
+    markAllRead: () =>
+      request<{ count: number }>("/notifications/read-all", { method: "PATCH" }),
   },
 
   uploads: {

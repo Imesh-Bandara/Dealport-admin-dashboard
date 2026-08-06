@@ -17,6 +17,12 @@ enum StockStatus {
   OUT_OF_STOCK
 }
 
+enum NotificationType {
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  PRODUCT_DELETED
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -67,4 +73,18 @@ model Product {
   @@index([name])
   @@index([status])
   @@index([categoryId])
+}
+
+// No FK to Product on purpose: a "product deleted" notification must
+// survive after the product it refers to is gone, so the message is a
+// pre-formatted, self-contained string rather than a live reference.
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([read])
+  @@index([createdAt])
 }

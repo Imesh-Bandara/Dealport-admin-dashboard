@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import type { Product } from "@/lib/types";
@@ -50,9 +51,24 @@ export function BestSellingWidget() {
               ))}
             {products?.map((product) => (
               <tr key={product.id} className="border-t border-slate-100 dark:border-slate-800">
-                <td className="flex items-center gap-2 py-2.5 pr-3 font-medium text-slate-700 dark:text-slate-200">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                  {product.name}
+                <td className="py-2.5 pr-3">
+                  <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                      {product.imageUrl ? (
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          width={28}
+                          height={28}
+                          className="h-full w-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                      )}
+                    </div>
+                    {product.name}
+                  </div>
                 </td>
                 <td className="py-2.5 pr-3 text-slate-500 dark:text-slate-400">{product.totalOrders}</td>
                 <td

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Pencil, Trash2, Plus, Eye } from "lucide-react";
@@ -146,7 +147,25 @@ export default function ProductListPage() {
               {!isLoading &&
                 data?.items.map((product) => (
                   <tr key={product.id} className="border-t border-slate-100 dark:border-slate-800">
-                    <td className="py-3 pr-3 font-medium text-slate-800 dark:text-slate-100">{product.name}</td>
+                    <td className="py-3 pr-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+                          {product.imageUrl ? (
+                            <Image
+                              src={product.imageUrl}
+                              alt={product.name}
+                              width={36}
+                              height={36}
+                              className="h-full w-full object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">IMG</span>
+                          )}
+                        </div>
+                        <span className="font-medium text-slate-800 dark:text-slate-100">{product.name}</span>
+                      </div>
+                    </td>
                     <td className="py-3 pr-3 text-slate-500 dark:text-slate-400">{product.category?.name ?? "—"}</td>
                     <td className="py-3 pr-3 text-slate-500 dark:text-slate-400">{product.totalOrders}</td>
                     <td

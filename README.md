@@ -63,7 +63,7 @@ npm run start:dev   # http://localhost:4000/api
 | `PORT` | API port (default `4000`) |
 | `CORS_ORIGIN` | Comma-separated list of allowed frontend origins |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Credentials created by the seed script |
-| `GEMINI_API_KEY` | Required only for the "Generate description with AI" button (the magic-wand icon next to Product Description on the Add Product form). Get a free key from [Google AI Studio](https://aistudio.google.com/apikey). Without it, that one button returns a clean error — everything else in the app works normally. |
+| `GROQ_API_KEY` | Required only for the "Generate description with AI" button (the magic-wand icon next to Product Description on the Add Product form). Get a free key from [Groq Console](https://console.groq.com/keys) (no billing account required for the free tier). Without it, that one button returns a clean error — everything else in the app works normally. |
 
 ### Seed credentials (local dev only — rotate before any real deployment)
 
@@ -159,11 +159,15 @@ Log in at `/login` with the seed credentials above.
     magic-wand icon next to Product Description calls `POST
     /api/products/generate-description` (`apps/api/src/products`), which
     builds a short prompt from the current name/category/price and calls the
-    real Gemini API (`gemini-2.0-flash`, native `fetch`, ~10s timeout).
-    Requires `GEMINI_API_KEY` — see env vars above; without it the endpoint
-    returns a clean 503 and the rest of the form is unaffected. The pencil
-    icon just toggles the textarea between read-only and editable; no API
-    call.
+    real Groq API (`llama-3.3-70b-versatile` via Groq's OpenAI-compatible
+    chat completions endpoint, native `fetch`, ~10s timeout). Originally
+    built against Gemini; switched to Groq because Gemini's free tier
+    wasn't usable from a fresh Google Cloud project (hard 0 quota even with
+    billing linked), while Groq's free tier needs no billing account at
+    all. Requires `GROQ_API_KEY` — see env vars above; without it the
+    endpoint returns a clean 503 and the rest of the form is unaffected.
+    The pencil icon just toggles the textarea between read-only and
+    editable; no API call.
 - **Product List:** API-integrated table with search, category filter,
   status filter, and pagination; edit and delete actions call
   `PATCH`/`DELETE /products/:id` (edit reuses the same form component as Add

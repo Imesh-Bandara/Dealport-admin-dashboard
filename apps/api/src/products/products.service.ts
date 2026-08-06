@@ -13,8 +13,13 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { GenerateDescriptionDto } from './dto/generate-description.dto';
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
-const GEMINI_TIMEOUT_MS = 10_000;
+// Groq (groq.com) hosts open models behind an OpenAI-compatible chat
+// completions API — not to be confused with xAI's "Grok". Swapped in here
+// after Gemini's free tier proved unusable (new Google Cloud projects were
+// stuck at a hard 0 quota even with billing linked); Groq's free tier
+// doesn't require a billing account at all.
+const AI_MODEL = 'llama-3.3-70b-versatile';
+const AI_TIMEOUT_MS = 10_000;
 
 @Injectable()
 export class ProductsService {
@@ -173,45 +178,55 @@ export class ProductsService {
   }
 
   /**
-   * Generates a short marketing-style product description via the Gemini
-   * API. Never throws an unhandled error — every failure mode (missing key,
-   * timeout, non-200, unparseable response) is mapped to a clean HTTP
-   * exception with a message safe to show the admin.
+   * Generates a short marketing-style product description via Groq's
+   * OpenAI-compatible chat completions API. Never throws an unhandled
+   * error — every failure mode (missing key, timeout, non-200, unparseable
+   * response) is mapped to a clean HTTP exception with a message safe to
+   * show the admin.
    */
   async generateDescription(
     dto: GenerateDescriptionDto,
   ): Promise<{ description: string }> {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       throw new ServiceUnavailableException(
-        'AI description generation is not configured (missing GEMINI_API_KEY).',
+        'AI description generation is not configured (missing GROQ_API_KEY).',
       );
     }
 
-    const prompt = this.buildDescriptionPrompt(dto);
+    const { system, user } = this.buildDescriptionPrompt(dto);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+    const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
     let response: Response;
     try {
       response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+        'https://api.groq.com/openai/v1/chat/completions',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: AI_MODEL,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+          }),
           signal: controller.signal,
         },
       );
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        this.logger.warn('Gemini API call timed out');
+        this.logger.warn('Groq API call timed out');
         throw new RequestTimeoutException(
           'AI description generation timed out. Please try again.',
         );
       }
       this.logger.warn(
-        `Gemini API call failed: ${err instanceof Error ? err.message : 'unknown error'}`,
+        `Groq API call failed: ${err instanceof Error ? err.message : 'unknown error'}`,
       );
       throw new ServiceUnavailableException(
         'Could not reach the AI description service. Please try again.',
@@ -221,7 +236,7 @@ export class ProductsService {
     }
 
     if (!response.ok) {
-      this.logger.warn(`Gemini API responded with ${response.status}`);
+      this.logger.warn(`Groq API responded with ${response.status}`);
       throw new ServiceUnavailableException(
         'AI description generation failed. Please try again or write one manually.',
       );
@@ -236,7 +251,7 @@ export class ProductsService {
       );
     }
 
-    const text = this.extractGeminiText(data);
+    const text = this.extractGroqText(data);
     if (!text) {
       throw new ServiceUnavailableException(
         'AI description service returned an empty response.',
@@ -246,28 +261,29 @@ export class ProductsService {
     return { description: text.trim() };
   }
 
-  private buildDescriptionPrompt(dto: GenerateDescriptionDto): string {
+  private buildDescriptionPrompt(dto: GenerateDescriptionDto): {
+    system: string;
+    user: string;
+  } {
     const details = [`Product name: ${dto.name}`];
     if (dto.category) details.push(`Category: ${dto.category}`);
     if (dto.price !== undefined) details.push(`Price: $${dto.price}`);
 
-    return [
-      'Write a short e-commerce product description: 2-3 sentences, upbeat',
-      'and persuasive marketing tone, plain text only (no markdown, no',
-      'quotation marks around the output).',
-      '',
-      details.join('\n'),
-    ].join('\n');
+    return {
+      system:
+        'You write short e-commerce product descriptions: 2-3 sentences, ' +
+        'upbeat and persuasive marketing tone, plain text only (no markdown, ' +
+        'no quotation marks around the output).',
+      user: details.join('\n'),
+    };
   }
 
-  private extractGeminiText(data: unknown): string | null {
+  private extractGroqText(data: unknown): string | null {
     if (typeof data !== 'object' || data === null) return null;
-    const candidates = (data as { candidates?: unknown }).candidates;
-    if (!Array.isArray(candidates) || candidates.length === 0) return null;
-    const content = (candidates[0] as { content?: unknown })?.content;
-    const parts = (content as { parts?: unknown })?.parts;
-    if (!Array.isArray(parts) || parts.length === 0) return null;
-    const text = (parts[0] as { text?: unknown })?.text;
-    return typeof text === 'string' ? text : null;
+    const choices = (data as { choices?: unknown }).choices;
+    if (!Array.isArray(choices) || choices.length === 0) return null;
+    const message = (choices[0] as { message?: unknown })?.message;
+    const content = (message as { content?: unknown })?.content;
+    return typeof content === 'string' ? content : null;
   }
 }

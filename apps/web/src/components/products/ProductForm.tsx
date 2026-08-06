@@ -365,7 +365,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                 <p className="mt-1.5 text-xs text-slate-400">
                   <Pencil className="mr-1 inline h-3 w-3 align-[-1px]" /> toggles editing ·{" "}
                   <Wand2 className="mr-1 inline h-3 w-3 align-[-1px]" /> generates a description from the name/
-                  category/price via Gemini.
+                  category/price via AI.
                 </p>
               </div>
             </div>

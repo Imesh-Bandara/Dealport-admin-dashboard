@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Pencil, Trash2, Plus, Eye } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { api, ApiError } from "@/lib/api";
-import type { Category, PaginatedProducts, ProductStatus } from "@/lib/types";
+import type { Category, PaginatedProducts, Product, ProductStatus } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
 
 const PAGE_SIZE = 8;
@@ -24,6 +25,7 @@ export default function ProductListPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [productPendingDelete, setProductPendingDelete] = useState<Product | null>(null);
 
   const load = useCallback(() => {
     Promise.resolve()
@@ -45,8 +47,9 @@ export default function ProductListPage() {
     api.categories().then(setCategories).catch(() => undefined);
   }, []);
 
-  async function handleDelete(id: string) {
-    if (!window.confirm("Delete this product? This cannot be undone.")) return;
+  async function confirmDelete() {
+    if (!productPendingDelete) return;
+    const id = productPendingDelete.id;
     setDeletingId(id);
     try {
       await api.products.remove(id);
@@ -55,6 +58,7 @@ export default function ProductListPage() {
       setError(err instanceof ApiError ? err.message : "Failed to delete product");
     } finally {
       setDeletingId(null);
+      setProductPendingDelete(null);
     }
   }
 
@@ -211,7 +215,7 @@ export default function ProductListPage() {
                       <button
                         aria-label={`Delete ${product.name}`}
                         disabled={deletingId === product.id}
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => setProductPendingDelete(product)}
                         className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-red-600 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -247,6 +251,21 @@ export default function ProductListPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={productPendingDelete !== null}
+        variant="danger"
+        title="Delete product?"
+        message={
+          productPendingDelete
+            ? `This will permanently delete "${productPendingDelete.name}". This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        isLoading={deletingId === productPendingDelete?.id}
+        onCancel={() => setProductPendingDelete(null)}
+        onConfirm={() => void confirmDelete()}
+      />
     </AppShell>
   );
 }

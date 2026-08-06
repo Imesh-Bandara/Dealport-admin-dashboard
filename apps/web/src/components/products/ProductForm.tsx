@@ -22,6 +22,15 @@ const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "i
 
 const COLOR_SWATCHES = ["#bbf7d0", "#fecaca", "#bfdbfe", "#fef08a", "#1f2937"];
 
+// Shared with every text/number/date input and <select> in this form so
+// light/dark styling stays identical across all of them.
+const FIELD_CLASS =
+  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-emerald-900";
+const LABEL_CLASS = "mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300";
+const CARD_CLASS =
+  "rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900";
+const CARD_TITLE_CLASS = "text-sm font-semibold text-slate-800 dark:text-slate-100";
+
 interface ProductFormProps {
   mode: "create" | "edit";
   productId?: string;
@@ -251,7 +260,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
   return (
     <form className="space-y-5" noValidate>
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-900">
+        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {mode === "edit" ? "Edit Product" : "Add New Product"}
         </h1>
         <div className="flex gap-2">
@@ -260,7 +269,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               href={`/products/${productId}/preview`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <Eye className="h-4 w-4" /> View as Customer
             </Link>
@@ -269,7 +278,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
             type="button"
             disabled={isSubmitting !== null}
             onClick={(e) => handleSubmit(e, "DRAFT")}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {isSubmitting === "draft" ? "Saving…" : "Save to draft"}
           </button>
@@ -285,18 +294,18 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
           {error}
         </p>
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Basic Details</h2>
+          <section className={CARD_CLASS}>
+            <h2 className={CARD_TITLE_CLASS}>Basic Details</h2>
             <div className="mt-4 space-y-4">
               <div>
-                <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="name" className={LABEL_CLASS}>
                   Product Name
                 </label>
                 <input
@@ -305,11 +314,11 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   onChange={(e) => setName(e.target.value)}
                   required
                   maxLength={200}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className={FIELD_CLASS}
                 />
               </div>
               <div>
-                <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="description" className={LABEL_CLASS}>
                   Product Description
                 </label>
                 <div className="relative">
@@ -321,8 +330,10 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                     rows={4}
                     maxLength={4000}
                     className={clsx(
-                      "w-full rounded-lg border border-slate-300 px-3 py-2 pb-9 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100",
-                      !isDescriptionEditable && "bg-slate-50 text-slate-500",
+                      "w-full rounded-lg border border-slate-300 px-3 py-2 pb-9 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-emerald-900",
+                      !isDescriptionEditable
+                        ? "bg-slate-50 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400"
+                        : "dark:bg-slate-800",
                     )}
                   />
                   <div className="absolute bottom-2 right-2 flex items-center gap-1">
@@ -335,8 +346,8 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                       className={clsx(
                         "flex h-7 w-7 items-center justify-center rounded-md border transition-colors",
                         isDescriptionEditable
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-600"
-                          : "border-slate-200 bg-white text-slate-400 hover:text-slate-600",
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                          : "border-slate-200 bg-white text-slate-400 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 dark:hover:text-slate-300",
                       )}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -347,7 +358,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                       title="Generate description with AI"
                       disabled={isGeneratingDescription}
                       onClick={() => void handleGenerateDescription()}
-                      className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-300 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-300 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
                     >
                       {isGeneratingDescription ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -358,11 +369,11 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   </div>
                 </div>
                 {descriptionError && (
-                  <p role="alert" className="mt-1.5 text-xs text-red-600">
+                  <p role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
                     {descriptionError}
                   </p>
                 )}
-                <p className="mt-1.5 text-xs text-slate-400">
+                <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
                   <Pencil className="mr-1 inline h-3 w-3 align-[-1px]" /> toggles editing ·{" "}
                   <Wand2 className="mr-1 inline h-3 w-3 align-[-1px]" /> generates a description from the name/
                   category/price via AI.
@@ -371,15 +382,17 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Pricing</h2>
+          <section className={CARD_CLASS}>
+            <h2 className={CARD_TITLE_CLASS}>Pricing</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="price" className={LABEL_CLASS}>
                   Product Price
                 </label>
-                <div className="flex items-stretch rounded-lg border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <span className="flex items-center pl-3 text-sm text-slate-400">{selectedCurrency.symbol}</span>
+                <div className="flex items-stretch rounded-lg border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100 dark:border-slate-700 dark:focus-within:ring-emerald-900">
+                  <span className="flex items-center pl-3 text-sm text-slate-400 dark:text-slate-500">
+                    {selectedCurrency.symbol}
+                  </span>
                   <input
                     id="price"
                     type="number"
@@ -388,13 +401,13 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     required
-                    className="w-full min-w-0 border-none bg-transparent px-2 py-2 text-sm outline-none"
+                    className="w-full min-w-0 border-none bg-transparent px-2 py-2 text-sm text-slate-900 outline-none dark:text-slate-100"
                   />
-                  <div className="flex items-center border-l border-slate-200 pl-1">
+                  <div className="flex items-center border-l border-slate-200 pl-1 dark:border-slate-700">
                     <CurrencySelect value={country} options={COUNTRY_CURRENCIES} onChange={handleCountryChange} />
                   </div>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   {selectedCurrency.currency === "USD"
                     ? "Stored and submitted in USD."
                     : `= ${formatCurrencyAmount(priceUsd, DEFAULT_COUNTRY_CURRENCY)} — this is what's stored and submitted (converted live at a static reference rate, not a live feed).`}
@@ -402,11 +415,11 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               </div>
 
               <div>
-                <label htmlFor="discountAmount" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="discountAmount" className={LABEL_CLASS}>
                   Discounted Price (Optional)
                 </label>
-                <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <span className="flex items-center bg-emerald-50 px-3 text-sm font-semibold text-emerald-700">
+                <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100 dark:border-slate-700 dark:focus-within:ring-emerald-900">
+                  <span className="flex items-center bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                     {selectedCurrency.symbol}
                   </span>
                   <input
@@ -417,24 +430,26 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                     value={discountAmount}
                     onChange={(e) => setDiscountAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full min-w-0 border-none px-2 py-2 text-sm outline-none"
+                    className="w-full min-w-0 border-none bg-transparent px-2 py-2 text-sm text-slate-900 outline-none dark:text-slate-100"
                   />
                   {salePrice !== null && (
-                    <span className="flex items-center whitespace-nowrap pr-3 text-xs text-slate-500">
+                    <span className="flex items-center whitespace-nowrap pr-3 text-xs text-slate-500 dark:text-slate-400">
                       Sale=
-                      <span className="ml-1 font-semibold text-emerald-600">
+                      <span className="ml-1 font-semibold text-emerald-600 dark:text-emerald-400">
                         {formatCurrencyAmount(salePrice, selectedCurrency)}
                       </span>
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-slate-400">Amount to subtract from the price above.</p>
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                  Amount to subtract from the price above.
+                </p>
               </div>
 
               <div>
-                <span className="mb-1.5 block text-sm font-medium text-slate-700">Tax Included</span>
+                <span className={LABEL_CLASS}>Tax Included</span>
                 <div className="flex items-center gap-4 py-2">
-                  <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                  <label className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
                     <input
                       type="radio"
                       name="taxIncluded"
@@ -444,7 +459,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                     />
                     Yes
                   </label>
-                  <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                  <label className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
                     <input
                       type="radio"
                       name="taxIncluded"
@@ -458,10 +473,10 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               </div>
 
               <div className="sm:col-span-2">
-                <span className="mb-1.5 block text-sm font-medium text-slate-700">Expiration</span>
+                <span className={LABEL_CLASS}>Expiration</span>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="expirationStart" className="mb-1 block text-xs text-slate-500">
+                    <label htmlFor="expirationStart" className="mb-1 block text-xs text-slate-500 dark:text-slate-400">
                       Start
                     </label>
                     <input
@@ -469,11 +484,11 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                       type="date"
                       value={expirationStart}
                       onChange={(e) => setExpirationStart(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                      className={clsx(FIELD_CLASS, "[color-scheme:light] dark:[color-scheme:dark]")}
                     />
                   </div>
                   <div>
-                    <label htmlFor="expirationEnd" className="mb-1 block text-xs text-slate-500">
+                    <label htmlFor="expirationEnd" className="mb-1 block text-xs text-slate-500 dark:text-slate-400">
                       End
                     </label>
                     <input
@@ -482,22 +497,22 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                       value={expirationEnd}
                       min={expirationStart || undefined}
                       onChange={(e) => setExpirationEnd(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                      className={clsx(FIELD_CLASS, "[color-scheme:light] dark:[color-scheme:dark]")}
                     />
                   </div>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   Optional — leave both blank if this pricing never expires.
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Inventory</h2>
+          <section className={CARD_CLASS}>
+            <h2 className={CARD_TITLE_CLASS}>Inventory</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="stockQuantity" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="stockQuantity" className={LABEL_CLASS}>
                   Stock Quantity
                 </label>
                 <input
@@ -508,18 +523,21 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   value={stockUnlimited ? "" : stockQuantity}
                   placeholder={stockUnlimited ? "Unlimited" : undefined}
                   onChange={(e) => setStockQuantity(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-50 disabled:text-slate-400"
+                  className={clsx(
+                    FIELD_CLASS,
+                    "disabled:bg-slate-50 disabled:text-slate-400 dark:disabled:bg-slate-800/50 dark:disabled:text-slate-500",
+                  )}
                 />
               </div>
               <div>
-                <label htmlFor="stockStatus" className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="stockStatus" className={LABEL_CLASS}>
                   Stock Status
                 </label>
                 <select
                   id="stockStatus"
                   value={stockStatus}
                   onChange={(e) => setStockStatus(e.target.value as StockStatus)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className={FIELD_CLASS}
                 >
                   <option value="IN_STOCK">In Stock</option>
                   <option value="OUT_OF_STOCK">Out of Stock</option>
@@ -534,7 +552,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   onClick={() => setStockUnlimited((v) => !v)}
                   className={clsx(
                     "inline-flex h-6 w-11 shrink-0 items-center rounded-full border-0 p-0 transition-colors",
-                    stockUnlimited ? "bg-emerald-600" : "bg-slate-300",
+                    stockUnlimited ? "bg-emerald-600" : "bg-slate-300 dark:bg-slate-700",
                   )}
                 >
                   <span
@@ -544,9 +562,9 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                     )}
                   />
                 </button>
-                <span className="text-sm text-slate-600">Unlimited</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">Unlimited</span>
               </div>
-              <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-2">
+              <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 sm:col-span-2">
                 <input
                   type="checkbox"
                   checked={featured}
@@ -557,12 +575,12 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               </label>
             </div>
 
-            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-5">
+            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
               <button
                 type="button"
                 disabled={isSubmitting !== null}
                 onClick={(e) => handleSubmit(e, "DRAFT")}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 {isSubmitting === "draft" ? "Saving…" : "Save to draft"}
               </button>
@@ -579,8 +597,8 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
         </div>
 
         <div className="space-y-5">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Upload Product Image</h2>
+          <section className={CARD_CLASS}>
+            <h2 className={CARD_TITLE_CLASS}>Upload Product Image</h2>
 
             <input
               ref={mainFileInputRef}
@@ -594,7 +612,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
             />
 
             <div
-              className="mt-3 flex h-40 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50"
+              className="mt-3 flex h-40 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -607,7 +625,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={imageUrl} alt="Product preview" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex flex-col items-center gap-1 text-slate-400">
+                <div className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500">
                   <ImagePlus className="h-6 w-6" />
                   <span className="text-xs">Drag & drop or browse</span>
                 </div>
@@ -618,7 +636,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               type="button"
               disabled={isUploadingMain}
               onClick={() => mainFileInputRef.current?.click()}
-              className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+              className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               {isUploadingMain ? "Uploading…" : imageUrl ? "Replace" : "Browse"}
             </button>
@@ -636,7 +654,10 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
 
             <div className="mt-3 grid grid-cols-3 gap-2">
               {images.map((url) => (
-                <div key={url} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200">
+                <div
+                  key={url}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="Product gallery" className="h-full w-full object-cover" />
                   <button
@@ -654,7 +675,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   type="button"
                   disabled={isUploadingGallery}
                   onClick={() => galleryFileInputRef.current?.click()}
-                  className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 text-slate-400 hover:border-emerald-400 hover:text-emerald-600 disabled:opacity-60"
+                  className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 text-slate-400 hover:border-emerald-400 hover:text-emerald-600 disabled:opacity-60 dark:border-slate-700 dark:text-slate-500 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
                 >
                   {isUploadingGallery ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   <span className="text-[11px] font-medium">Add Image</span>
@@ -663,17 +684,17 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Categories</h2>
+          <section className={CARD_CLASS}>
+            <h2 className={CARD_TITLE_CLASS}>Categories</h2>
             <div className="mt-3">
-              <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label htmlFor="category" className={LABEL_CLASS}>
                 Product Categories
               </label>
               <select
                 id="category"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                className={FIELD_CLASS}
               >
                 <option value="">Select your category</option>
                 {categories.map((c) => (
@@ -684,7 +705,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               </select>
             </div>
             <div className="mt-3">
-              <label htmlFor="tags" className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label htmlFor="tags" className={LABEL_CLASS}>
                 Product Tag
               </label>
               <input
@@ -692,13 +713,13 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="e.g. new, sale, featured"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                className={FIELD_CLASS}
               />
-              <p className="mt-1 text-xs text-slate-400">Comma-separated tags.</p>
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Comma-separated tags.</p>
             </div>
 
             <div className="mt-3">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Select your color(s)</span>
+              <span className={LABEL_CLASS}>Select your color(s)</span>
               <div className="flex gap-2">
                 {COLOR_SWATCHES.map((swatch) => {
                   const isSelected = colors.includes(swatch);
@@ -713,9 +734,10 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                           prev.includes(swatch) ? prev.filter((c) => c !== swatch) : [...prev, swatch],
                         )
                       }
-                      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
-                        isSelected ? "border-emerald-600" : "border-transparent"
-                      }`}
+                      className={clsx(
+                        "flex h-7 w-7 items-center justify-center rounded-full border-2",
+                        isSelected ? "border-emerald-600" : "border-transparent dark:border-slate-700",
+                      )}
                       style={{ backgroundColor: swatch }}
                     >
                       {isSelected && (

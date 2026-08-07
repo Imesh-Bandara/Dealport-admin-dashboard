@@ -224,12 +224,40 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
     e.preventDefault();
     setError(null);
 
+    // Mirrors apps/api/src/products/dto/create-product.dto.ts — catches
+    // obviously-invalid input before a round trip, but the API is still the
+    // real source of truth and re-validates all of this server-side.
+    const MAX_AMOUNT = 1_000_000;
+    const MAX_TAGS = 20;
+
     if (!name.trim()) {
       setError("Product name is required.");
       return;
     }
+    if (name.trim().length > 200) {
+      setError("Product name must be 200 characters or fewer.");
+      return;
+    }
     if (!price || Number(price) < 0) {
       setError("Enter a valid product price.");
+      return;
+    }
+    if (priceUsd > MAX_AMOUNT) {
+      setError(`Price is too large — must be ${MAX_AMOUNT.toLocaleString()} or less.`);
+      return;
+    }
+    if (salePriceUsd !== null && (salePriceUsd < 0 || salePriceUsd > MAX_AMOUNT)) {
+      setError(`Discount price must be between 0 and ${MAX_AMOUNT.toLocaleString()}.`);
+      return;
+    }
+    const stockQuantityNum = Number(stockQuantity);
+    if (!stockUnlimited && (stockQuantityNum < 0 || stockQuantityNum > MAX_AMOUNT)) {
+      setError(`Stock quantity must be between 0 and ${MAX_AMOUNT.toLocaleString()}.`);
+      return;
+    }
+    const tagCount = tags.split(",").map((t) => t.trim()).filter(Boolean).length;
+    if (tagCount > MAX_TAGS) {
+      setError(`Too many tags — enter at most ${MAX_TAGS}.`);
       return;
     }
     if (expirationStart && expirationEnd && new Date(expirationEnd) < new Date(expirationStart)) {
@@ -519,6 +547,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
                   id="stockQuantity"
                   type="number"
                   min={0}
+                  max={1000000}
                   disabled={stockUnlimited}
                   value={stockUnlimited ? "" : stockQuantity}
                   placeholder={stockUnlimited ? "Unlimited" : undefined}

@@ -18,6 +18,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { GenerateDescriptionDto } from './dto/generate-description.dto';
+import { LimitQueryDto } from './dto/limit-query.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('products')
@@ -35,13 +36,13 @@ export class ProductsController {
   }
 
   @Get('top')
-  top(@Query('limit') limit?: string) {
-    return this.productsService.topProducts(limit ? Number(limit) : undefined);
+  top(@Query() query: LimitQueryDto) {
+    return this.productsService.topProducts(query.limit);
   }
 
   @Get('best-selling')
-  bestSelling(@Query('limit') limit?: string) {
-    return this.productsService.bestSelling(limit ? Number(limit) : undefined);
+  bestSelling(@Query() query: LimitQueryDto) {
+    return this.productsService.bestSelling(query.limit);
   }
 
   @Get(':id')

@@ -70,6 +70,7 @@ export default function ProductListPage() {
           <div className="flex flex-wrap gap-2">
             <input
               value={search}
+              maxLength={200}
               onChange={(e) => {
                 setPage(1);
                 setSearch(e.target.value);

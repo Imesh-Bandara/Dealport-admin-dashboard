@@ -57,6 +57,7 @@ export class CreateProductDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
+  @Max(1000000)
   stockQuantity?: number;
 
   @IsOptional()

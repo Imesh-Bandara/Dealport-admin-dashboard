@@ -259,11 +259,11 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
 
   return (
     <form className="space-y-5" noValidate>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {mode === "edit" ? "Edit Product" : "Add New Product"}
         </h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {mode === "edit" && productId && (
             <Link
               href={`/products/${productId}/preview`}
@@ -575,7 +575,7 @@ export function ProductForm({ mode, productId, initialData }: ProductFormProps) 
               </label>
             </div>
 
-            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
+            <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
               <button
                 type="button"
                 disabled={isSubmitting !== null}

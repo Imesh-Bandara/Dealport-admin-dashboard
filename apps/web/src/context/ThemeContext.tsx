@@ -72,9 +72,10 @@ export const THEME_INIT_SCRIPT = `
 (function () {
   try {
     var stored = localStorage.getItem('${STORAGE_KEY}');
-    var theme = stored === 'light' || stored === 'dark'
-      ? stored
-      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    // Default to light regardless of the visitor's OS/browser color-scheme
+    // preference — only an explicit in-app toggle (saved to localStorage)
+    // switches this to dark.
+    var theme = stored === 'light' || stored === 'dark' ? stored : 'light';
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.style.colorScheme = theme;
   } catch (e) {}
